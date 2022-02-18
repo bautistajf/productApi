@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: products-api
+
+management:
+  security:
+    enabled: false
+  endpoints:
+    web:
+      base-path: ${server.servlet.context-path}api-docs
+      exposure:
+        include: '*'
+
+server:
+  port: 5000
+  servlet:
+    context-path: /
+
+product-srv-feign-client:
+  name: product-srv
+  url: http://localhost:3001
+
+resilience4j.bulkhead:
+  configs:
+    default:
+      maxConcurrentCalls: 100 # Max amount of parallel executions allowed by the bulkhead
+      maxWaitDuration: 0 # Max amount of time a thread should be blocked for when attempting to enter a saturated bulkhead
+  instances:
+    product-srv:
+      baseConfig: default
+      maxConcurrentCalls: 20
+
+resilience4j.thread-pool-bulkhead:
+  configs:
+    default:
+      maxThreadPoolSize: 10 # Configures the max thread pool size
+      coreThreadPoolSize: 5 # Configures the core thread pool size
+      queueCapacity: 5 #Configures the capacity of the queue.
+      keepAliveDuration: 50 # [ms] When the number of threads is greater than the core, this is the maximum time that excess idle threads will wait for new tasks before terminating.
+  instances:
+    product-srv:
+      baseConfig: default
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
+
+---
+spring:
+  profiles: tests
+  output:
+    ansi:
+      enabled: ALWAYS
+  jackson:
+    serialization:
+      write_dates_as_timestamps: false
